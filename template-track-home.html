@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Excel Sheet Finder</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .upload-zone {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+        
+        .upload-zone:hover {
+            border-color: #4CAF50;
+            background: #f0f8f0;
+        }
+        
+        .upload-zone.dragover {
+            border-color: #4CAF50;
+            background: #e8f5e8;
+            transform: scale(1.02);
+        }
+        
+        .csid-table {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+        }
+        
+        .bulk-input {
+            min-height: 120px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            transition: border-color 0.3s ease;
+        }
+        
+        .bulk-input:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        }
+        
+        .btn-custom {
+            border-radius: 25px;
+            padding: 10px 20px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary-custom {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            color: white;
+        }
+        
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .progress-container {
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .progress {
+            height: 25px;
+            border-radius: 15px;
+            background: #e9ecef;
+        }
+        
+        .progress-bar {
+            border-radius: 15px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            transition: width 0.3s ease;
+        }
+        
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #4CAF50;
+        }
+        
+        .csid-row {
+            transition: all 0.3s ease;
+        }
+        
+        .csid-row:hover {
+            background: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        .found-sheets {
+            color: #28a745;
+            font-weight: 500;
+        }
+        
+        .not-found {
+            color: #dc3545;
+            font-weight: 500;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .loading-spinner {
+            display: none;
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-file-excel"></i> Excel Sheet Finder</h1>
+                <p class="mb-0">Track CSIDs across multiple Excel sheets efficiently</p>
+            </div>
+            
+            <div class="p-4">
+                <!-- File Upload Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4><i class="fas fa-upload"></i> Upload Excel File</h4>
+                        <div class="upload-zone" id="uploadZone">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                            <h5>Drag & Drop Excel File Here</h5>
+                            <p class="text-muted">or click to browse</p>
+                            <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+                            <button class="btn btn-primary-custom btn-custom" onclick="document.getElementById('fileInput').click()">
+                                <i class="fas fa-folder-open"></i> Browse Files
+                            </button>
+                        </div>
+                        
+                        <!-- Status Card -->
+                        <div class="status-card" id="statusCard" style="display: none;">
+                            <h6><i class="fas fa-info-circle"></i> File Status</h6>
+                            <div id="statusContent"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Input Section -->
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <!-- Single CSID Input -->
+                        <h5><i class="fas fa-plus-circle"></i> Add Single CSID</h5>
+                        <div class="input-group mb-3">
+                            <input type="text" class="form-control" id="singleCsid" placeholder="Enter CSID (e.g., SI-BK001899)">
+                            <button class="btn btn-primary-custom" id="addSingleBtn">
+                                <i class="fas fa-plus"></i> Add
+                                <div class="loading-spinner spinner-border spinner-border-sm" role="status"></div>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <!-- Management Buttons -->
+                        <h5><i class="fas fa-cogs"></i> Management</h5>
+                        <div class="btn-group" role="group">
+                            <button class="btn btn-outline-danger btn-custom" id="removeSelectedBtn">
+                                <i class="fas fa-trash"></i> Remove Selected
+                            </button>
+                            <button class="btn btn-outline-warning btn-custom" id="clearAllBtn">
+                                <i class="fas fa-broom"></i> Clear All
+                            </button>
+                            <button class="btn btn-outline-info btn-custom" id="refreshAllBtn">
+                                <i class="fas fa-sync"></i> Refresh All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Bulk Input Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h5><i class="fas fa-list"></i> Bulk CSID Input</h5>
+                        <textarea class="form-control bulk-input" id="bulkCsids" 
+                                  placeholder="Paste multiple CSIDs here (space, comma, or newline separated)&#10;Example: SI-BK001899 SI-BK001940 SI-BK001941"></textarea>
+                        <div class="mt-3">
+                            <button class="btn btn-primary-custom btn-custom me-2" id="addBulkBtn">
+                                <i class="fas fa-plus-square"></i> Add All CSIDs
+                                <div class="loading-spinner spinner-border spinner-border-sm" role="status"></div>
+                            </button>
+                            <button class="btn btn-outline-secondary btn-custom me-2" id="clearBulkBtn">
+                                <i class="fas fa-eraser"></i> Clear Text
+                            </button>
+                            <button class="btn btn-outline-success btn-custom" id="exportBtn">
+                                <i class="fas fa-file-excel"></i> Export to Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span id="progressText">Processing...</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+                
+                <!-- Results Table -->
+                <div class="row">
+                    <div class="col-12">
+                        <h5><i class="fas fa-table"></i> CSID Results <span class="badge bg-primary" id="resultCount">0</span></h5>
+                        <div class="csid-table">
+                            <table class="table table-hover table-striped mb-0">
+                                <thead class="table-dark sticky-top">
+                                    <tr>
+                                        <th style="width: 50px;">
+                                            <input type="checkbox" id="selectAll" class="form-check-input">
+                                        </th>
+                                        <th style="width: 200px;">CSID</th>
+                                        <th>Found In Sheets</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultsTable">
+                                    <tr>
+                                        <td colspan="3" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                                            No CSIDs added yet. Upload an Excel file and start adding CSIDs.
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Global variables
+        let csidData = [];
+        let fileLoaded = false;
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            checkStatus();
+        });
+        
+        function setupEventListeners() {
+            // File upload
+            const fileInput = document.getElementById('fileInput');
+            const uploadZone = document.getElementById('uploadZone');
+            
+            fileInput.addEventListener('change', handleFileUpload);
+            
+            // Drag and drop
+            uploadZone.addEventListener('dragover', handleDragOver);
+            uploadZone.addEventListener('dragleave', handleDragLeave);
+            uploadZone.addEventListener('drop', handleDrop);
+            uploadZone.addEventListener('click', () => fileInput.click());
+            
+            // CSID inputs
+            document.getElementById('addSingleBtn').addEventListener('click', addSingleCsid);
+            document.getElementById('singleCsid').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addSingleCsid();
+            });
+            
+            // Bulk operations
+            document.getElementById('addBulkBtn').addEventListener('click', addBulkCsids);
+            document.getElementById('clearBulkBtn').addEventListener('click', () => {
+                document.getElementById('bulkCsids').value = '';
+            });
+            
+            // Management buttons
+            document.getElementById('removeSelectedBtn').addEventListener('click', removeSelected);
+            document.getElementById('clearAllBtn').addEventListener('click', clearAll);
+            document.getElementById('refreshAllBtn').addEventListener('click', refreshAll);
+            document.getElementById('exportBtn').addEventListener('click', exportData);
+            
+            // Select all checkbox
+            document.getElementById('selectAll').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('#resultsTable input[type="checkbox"]');
+                checkboxes.forEach(cb => cb.checked = this.checked);
+            });
+        }
+        
+        function handleDragOver(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.add('dragover');
+        }
+        
+        function handleDragLeave(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.remove('dragover');
+        }
+        
+        function handleDrop(e) {
+            e.preventDefault();
+            document.getElementById('uploadZone').classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                handleFileUpload();
+            }
+        }
+        
+        function handleFileUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) return;
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            showProgress('Uploading file...', 0);
+            
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideProgress();
+                if (data.success) {
+                    fileLoaded = true;
+                    showStatus(data.message, file.name, data.sheets);
+                    showAlert('success', data.message);
+                } else {
+                    showAlert('danger', data.error);
+                }
+            })
+            .catch(error => {
+                hideProgress();
+                showAlert('danger', 'Upload failed: ' + error.message);
+            });
+        }
+        
+        function addSingleCsid() {
+            const csidInput = document.getElementById('singleCsid');
+            const csid = csidInput.value.trim();
+            
+            if (!csid) {
+                showAlert('warning', 'Please enter a CSID');
+                return;
+            }
+            
+            if (!fileLoaded) {
+                showAlert('warning', 'Please upload an Excel file first');
+                return;
+            }
+            
+            // Check for duplicates
+            if (csidData.some(item => item.csid === csid)) {
+                showAlert('warning', 'CSID already exists');
+                return;
+            }
+            
+            const btn = document.getElementById('addSingleBtn');
+            setButtonLoading(btn, true);
+            
+            fetch('/add_csid', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({csid: csid})
+            })
+            .then(response => response.json())
+            .then(data => {
+                setButtonLoading(btn, false);
+                if (data.success) {
+                    csidData.push({
+                        csid: data.csid,
+                        found_sheets: data.found_sheets
+                    });
+                    updateTable();
+                    csidInput.value = '';
+                    csidInput.focus();
+                } else {
+                    showAlert('danger', data.error);
+                }
+            })
+            .catch(error => {
+                setButtonLoading(btn, false);
+                showAlert('danger', 'Error: ' + error.message);
+            });
+        }
+        
+        function addBulkCsids() {
+            const bulkInput = document.getElementById('bulkCsids');
+            const csidsText = bulkInput.value.trim();
+            
+            if (!csidsText) {
+                showAlert('warning', 'Please enter CSIDs in the bulk input area');
+                return;
+            }
+            
+            if (!fileLoaded) {
+                showAlert('warning', 'Please upload an Excel file first');
+                return;
+            }
+            
+            const btn = document.getElementById('addBulkBtn');
+            setButtonLoading(btn, true);
+            showProgress('Processing bulk CSIDs...', 0);
+            
+            fetch('/add_bulk_csids', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({csids: csidsText})
+            })
+            .then(response => response.json())
+            .then(data => {
+                setButtonLoading(btn, false);
+                hideProgress();
+                
+                if (data.success) {
+                    // Filter out duplicates
+                    const existingCsids = new Set(csidData.map(item => item.csid));
+                    const newItems = data.results.filter(item => !existingCsids.has(item.csid));
+                    
+                    csidData.push(...newItems);
+                    updateTable();
+                    bulkInput.value = '';
+                    showAlert('success', `Added ${newItems.length} CSIDs (${data.results.length - newItems.length} duplicates skipped)`);
+                } else {
+                    showAlert('danger', data.error);
+                }
+            })
+            .catch(error => {
+                setButtonLoading(btn, false);
+                hideProgress();
+                showAlert('danger', 'Error: ' + error.message);
+            });
+        }
+        
+        function removeSelected() {
+            const selected = document.querySelectorAll('#resultsTable input[type="checkbox"]:checked');
+            if (selected.length === 0) {
+                showAlert('warning', 'Please select items to remove');
+                return;
+            }
+            
+            const indicesToRemove = Array.from(selected).map(cb => parseInt(cb.dataset.index));
+            csidData = csidData.filter((_, index) => !indicesToRemove.includes(index));
+            updateTable();
+            showAlert('success', `Removed ${selected.length} items`);
+        }
+        
+        function clearAll() {
+            if (csidData.length === 0) {
+                showAlert('info', 'No data to clear');
+                return;
+            }
+            
+            if (confirm('Are you sure you want to clear all CSIDs?')) {
+                csidData = [];
+                updateTable();
+                showAlert('success', 'All data cleared');
+            }
+        }
+        
+        function refreshAll() {
+            if (csidData.length === 0) {
+                showAlert('info', 'No CSIDs to refresh');
+                return;
+            }
+            
+            if (!fileLoaded) {
+                showAlert('warning', 'Please upload an Excel file first');
+                return;
+            }
+            
+            const csids = csidData.map(item => item.csid);
+            showProgress('Refreshing CSIDs...', 0);
+            
+            fetch('/refresh_csids', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({csids: csids})
+            })
+            .then(response => response.json())
+            .then(data => {
+                hideProgress();
+                if (data.success) {
+                    csidData = data.results;
+                    updateTable();
+                    showAlert('success', `Refreshed ${data.results.length} CSIDs`);
+                } else {
+                    showAlert('danger', data.error);
+                }
+            })
+            .catch(error => {
+                hideProgress();
+                showAlert('danger', 'Error: ' + error.message);
+            });
+        }
+        
+        function exportData() {
+            if (csidData.length === 0) {
+                showAlert('warning', 'No data to export');
+                return;
+            }
+            
+            const exportData = csidData.map(item => ({
+                CSID: item.csid,
+                'Found In Sheets': item.found_sheets
+            }));
+            
+            fetch('/export', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({data: exportData})
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.blob();
+                }
+                throw new Error('Export failed');
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `csid_results_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                showAlert('success', 'Data exported successfully');
+            })
+            .catch(error => {
+                showAlert('danger', 'Export failed: ' + error.message);
+            });
+        }
+        
+        function updateTable() {
+            const tbody = document.getElementById('resultsTable');
+            const countBadge = document.getElementById('resultCount');
+            
+            if (csidData.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-2x mb-2"></i><br>
+                            No CSIDs added yet. Upload an Excel file and start adding CSIDs.
+                        </td>
+                    </tr>
+                `;
+                countBadge.textContent = '0';
+                return;
+            }
+            
+            tbody.innerHTML = csidData.map((item, index) => `
+                <tr class="csid-row fade-in">
+                    <td>
+                        <input type="checkbox" class="form-check-input" data-index="${index}">
+                    </td>
+                    <td><strong>${item.csid}</strong></td>
+                    <td>
+                        <span class="${item.found_sheets === 'Not Found' ? 'not-found' : 'found-sheets'}">
+                            ${item.found_sheets}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+            
+            countBadge.textContent = csidData.length;
+        }
+        
+        function showAlert(type, message) {
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            const container = document.querySelector('.main-container .p-4');
+            container.insertBefore(alertDiv, container.firstChild);
+            
+            // Auto dismiss after 5 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 5000);
+        }
+        
+        function showProgress(text, percent) {
+            const container = document.getElementById('progressContainer');
+            const textElement = document.getElementById('progressText');
+            const percentElement = document.getElementById('progressPercent');
+            const progressBar = document.getElementById('progressBar');
+            
+            textElement.textContent = text;
+            percentElement.textContent = `${percent}%`;
+            progressBar.style.width = `${percent}%`;
+            container.style.display = 'block';
+        }
+        
+        function hideProgress() {
+            document.getElementById('progressContainer').style.display = 'none';
+        }
+        
+        function showStatus(message, filename, sheets) {
+            const statusCard = document.getElementById('statusCard');
+            const statusContent = document.getElementById('statusContent');
+            
+            statusContent.innerHTML = `
+                <p><strong>File:</strong> ${filename}</p>
+                <p><strong>Sheets:</strong> ${sheets.join(', ')}</p>
+                <p><strong>Status:</strong> ${message}</p>
+            `;
+            
+            statusCard.style.display = 'block';
+        }
+        
+        function setButtonLoading(button, loading) {
+            const spinner = button.querySelector('.loading-spinner');
+            if (loading) {
+                button.disabled = true;
+                spinner.style.display = 'inline-block';
+            } else {
+                button.disabled = false;
+                spinner.style.display = 'none';
+            }
+        }
+        
+        function checkStatus() {
+            fetch('/status')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.loaded) {
+                        fileLoaded = true;
+                        showStatus('File loaded successfully', data.filename, data.sheets);
+                    }
+                })
+                .catch(error => {
+                    console.log('No previous session found');
+                });
+        }
+    </script>
+</body>
+</html>
