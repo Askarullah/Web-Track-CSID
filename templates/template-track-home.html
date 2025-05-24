@@ -255,7 +255,7 @@
                     <input type="checkbox" id="selectAll" class="form-check-input">
                 </th>
                 <th style="width: 200px;">CSID</th>
-                <th>Found In Sheets</th>
+                <th> CO </th>
             </tr>
         </thead>
         <tbody id="resultsTable">
@@ -565,7 +565,7 @@ function copyTableContents() {
             
             const exportData = csidData.map(item => ({
                 CSID: item.csid,
-                'Found In Sheets': item.found_sheets
+                'CO': item.found_sheets
             }));
             
             fetch('/export', {
