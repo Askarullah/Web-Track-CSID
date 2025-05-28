@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TRACKING ODP PELANGGAN</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .main-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            margin: 20px auto;
+            max-width: 1200px;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .upload-zone {
+            border: 3px dashed #ddd;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .upload-zone:hover {
+            background-color: #e9ecef;
+            border-color: #4CAF50;
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            color: white;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin: 20px 0;
+            border-left: 5px solid #4CAF50;
+        }
+
+        .search-section {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .results-table {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+
+        .table thead th {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px;
+            font-weight: 600;
+        }
+
+        .table tbody td {
+            padding: 12px 15px;
+            border-color: #e9ecef;
+        }
+
+        .table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .border-dashed {
+            border: 2px dashed #4CAF50;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .progress {
+            height: 8px;
+            border-radius: 10px;
+            background-color: rgba(76, 175, 80, 0.2);
+        }
+
+        .progress-bar {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border-radius: 10px;
+        }
+
+        .form-control {
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 10px;
+            padding: 12px 24px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        }
+
+        .alert-success {
+            background-color: rgba(76, 175, 80, 0.1);
+            border-color: #4CAF50;
+            color: #2e7d32;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid p-4">
+        <div class="main-container">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-search"></i> TRACKING ODP PELANGGAN</h1>
+                <p class="mb-0">TG BALAI KARIMUN</p>
+            </div>
+
+            <div class="p-4">
+                <!-- File Upload Section -->
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <h4 class="text-primary mb-3"><i class="fas fa-upload me-2"></i>Upload Excel File</h4>
+                        <div class="upload-zone border-dashed" id="uploadZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                            <h5 class="mb-2">Drag & Drop Excel File Here</h5>
+                            <p class="text-muted small mb-3">Supported formats: .xlsx, .xls</p>
+                            <input type="file" id="excelFile" class="d-none" accept=".xlsx,.xls">
+                            <button class="btn btn-primary-custom btn-lg" onclick="document.getElementById('excelFile').click()">
+                                <i class="fas fa-folder-open me-2"></i>Browse Files
+                            </button>
+                        </div>
+
+                        <!-- Status Card -->
+                        <div class="status-card alert alert-dismissible fade mt-3 d-none" id="uploadStatus" role="alert">
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-3"></i>
+                                <div id="statusContent"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Section -->
+                <div class="search-section">
+                    <h4 class="text-primary mb-3"><i class="fas fa-search me-2"></i>Search ODP</h4>
+                    <div class="input-group mb-3">
+                        <input type="text" id="odpInput" class="form-control" placeholder="Enter ODP ID (e.g. LBS 7)">
+                        <button class="btn btn-primary" onclick="searchODP()">
+                            <i class="fas fa-search me-2"></i>Search
+                        </button>
+                    </div>
+                    
+                    <!-- Progress Bar -->
+                    <div id="searchProgress" class="mt-2 mb-3 d-none">
+                        <div class="progress mb-2">
+                            <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                        <div class="text-center">
+                            <i class="fas fa-spinner fa-spin me-2"></i>
+                            <span class="text-primary fw-bold">Searching...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Results Section -->
+                <div class="results-table">
+                    <table class="table table-striped mb-0">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-network-wired me-2"></i>IP Address</th>
+                                <th><i class="fas fa-id-card me-2"></i>CSID</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resultsBody">
+                            <tr>
+                                <td colspan="2" class="text-center text-muted py-4">
+                                    <i class="fas fa-search fa-2x mb-2 d-block"></i>
+                                    No results yet. Upload a file and search for an ODP ID.
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        let fileLoaded = false;
+
+        // Drag and drop handlers
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadZone').style.backgroundColor = '#e9ecef';
+        }
+
+        function handleDragLeave(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadZone').style.backgroundColor = '#f8f9fa';
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            document.getElementById('uploadZone').style.backgroundColor = '#f8f9fa';
+            const files = e.dataTransfer.files;
+            if(files.length > 0) {
+                document.getElementById('excelFile').files = files;
+                updateFileStatus(files[0]);
+            }
+        }
+
+        // File input change handler
+        document.getElementById('excelFile').addEventListener('change', function(e) {
+            if(this.files[0]) {
+                updateFileStatus(this.files[0]);
+            }
+        });
+
+        function updateFileStatus(file) {
+            const statusContent = document.getElementById('statusContent');
+            const statusCard = document.getElementById('uploadStatus');
+            
+            fileLoaded = true;
+            
+            statusContent.innerHTML = `
+                <div>
+                    <strong><i class="fas fa-file-excel me-2"></i>${file.name}</strong><br>
+                    <small class="text-muted">${(file.size/1024).toFixed(2)} KB</small>
+                    <div class="mt-2"><span class="badge bg-success"><i class="fas fa-check me-1"></i>Excel file loaded successfully</span></div>
+                </div>
+            `;
+            
+            statusCard.classList.remove('d-none');
+            statusCard.classList.add('show', 'alert-success');
+            statusCard.querySelector('i').className = 'fas fa-check-circle text-success me-3';
+        }
+
+        function searchODP() {
+            const fileInput = document.getElementById('excelFile');
+            const odpId = document.getElementById('odpInput').value;
+            const searchProgress = document.getElementById('searchProgress');
+            const resultsBody = document.getElementById('resultsBody');
+            
+            if (!fileLoaded) {
+                alert('Please upload an Excel file first');
+                return;
+            }
+            
+            if (!odpId.trim()) {
+                alert('Please enter an ODP ID');
+                return;
+            }
+            
+            // Show progress indicator
+            searchProgress.classList.remove('d-none');
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            formData.append('odp_id', odpId);
+
+            fetch('/search-odp', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                searchProgress.classList.add('d-none');
+                resultsBody.innerHTML = '';
+                
+                if (data.length > 0) {
+                    data.forEach(item => {
+                        resultsBody.innerHTML += `
+                            <tr>
+                                <td><i class="fas fa-network-wired me-2 text-primary"></i>${item.ip}</td>
+                                <td><i class="fas fa-id-card me-2 text-success"></i>${item.csid}</td>
+                            </tr>
+                        `;
+                    });
+                } else {
+                    resultsBody.innerHTML = `
+                        <tr>
+                            <td colspan="2" class="text-center text-muted py-4">
+                                <i class="fas fa-exclamation-circle fa-2x mb-2 d-block"></i>
+                                No results found for ODP ID: ${odpId}
+                            </td>
+                        </tr>
+                    `;
+                }
+            })
+            .catch(error => {
+                searchProgress.classList.add('d-none');
+                console.error('Error:', error);
+                resultsBody.innerHTML = `
+                    <tr>
+                        <td colspan="2" class="text-center text-danger py-4">
+                            <i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>
+                            An error occurred while searching. Please try again.
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // Allow Enter key to trigger search
+        document.getElementById('odpInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                searchODP();
+            }
+        });
+    </script>
+</body>
+</html>

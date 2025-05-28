@@ -8,8 +8,9 @@ import tempfile
 import json
 from datetime import datetime
 import io
+import openpyxl
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder='..\\templates')
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
@@ -40,7 +41,7 @@ def index():
     """Main page"""
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
-    return render_template('template-track-home.html')
+    return render_template('home.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -205,5 +206,38 @@ def get_status():
     else:
         return jsonify({'loaded': False})
 
+@app.route('/tracking-co.html')
+def track_home():
+    return render_template('tracking-co.html')
+
+@app.route('/tracking-odp.html')
+def track_odp():
+    return render_template('tracking-odp.html')
+    
+@app.route('/tracking-ip.html')
+def track_ip () :
+    return render_template('tracking-ip.html')
+
+@app.route('/search-odp', methods=['POST'])
+def search_odp():
+    odp_id = request.form.get('odp_id')
+    file = request.files['file']
+    
+    wb = openpyxl.load_workbook(file)
+    results = []
+    
+    for sheet_name in wb.sheetnames:
+        if sheet_name == "TRACK ODP":
+            continue
+        ws = wb[sheet_name]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[1] and str(row[1]).strip() == odp_id.strip():
+                results.append({
+                    'ip': row[2],
+                    'csid': row[3]
+                })
+    
+    return jsonify(results)
+
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5050)
