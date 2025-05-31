@@ -177,8 +177,13 @@
         <div class="main-container">
             <!-- Header -->
             <div class="header">
-                <h1><i class="fas fa-search"></i> TRACKING IP PELANGGAN</h1>
+                <h1><i class="fas fa-file-excel"></i> TRACKING IP PELANGGAN</h1>
                 <p class="mb-0">TG BALAI KARIMUN</p>
+                <div class="mt-3">
+                    <a href="/" class="btn btn-light btn-sm">
+                        <i class="fas fa-home"></i> Back to Home
+                    </a>
+                </div>
             </div>
 
             <div class="p-4">
@@ -246,12 +251,12 @@
                             <tr>
                                 <th><i class="fas fa-network-wired me-2"></i>CSID</th>
                                 <th><i class="fas fa-id-card me-2"></i>IP</th>
-                                <th><i class="fas fa-file-alt me-2"></i>CO ID</th>
+                                <!-- Sheet Name column removed -->
                             </tr>
                         </thead>
                         <tbody id="resultsBody">
                             <tr>
-                                <td colspan="3" class="text-center text-muted py-4">
+                                <td colspan="2" class="text-center text-muted py-4">
                                     <i class="fas fa-search fa-2x mb-2 d-block"></i>
                                     No results yet. Upload a file and search for IP addresses.
                                 </td>
@@ -336,7 +341,7 @@
 
         function findIP(searchIP) {
             if (!workbookData) {
-                return { csid: "No file loaded", sheetName: "" };
+                return { csid: "No file loaded" };
             }
 
             const trimmedIP = searchIP.trim();
@@ -356,12 +361,12 @@
                     const row = jsonData[rowIndex];
                     if (row[3] && row[3].toString().trim() === trimmedIP) {
                         const csid = row[2] || "No CSID found";
-                        return { csid: csid, sheetName: sheetName };
+                        return { csid: csid };
                     }
                 }
             }
             
-            return { csid: "Not Found", sheetName: "" };
+            return { csid: "Not Found" };
         }
 
         function searchBulkIPs() {
@@ -409,8 +414,8 @@
                         
                         searchResults.push({
                             ip: ip,
-                            csid: result.csid,
-                            sheetName: result.sheetName
+                            csid: result.csid
+                            // sheetName removed
                         });
                         
                         const progress = ((processed + 1) / total) * 100;
@@ -446,14 +451,13 @@
                         <tr>
                             <td><i class="fas fa-network-wired me-2 text-primary"></i>${result.ip}</td>
                             <td><i class="${statusIcon} me-2 ${statusClass}"></i>${result.csid}</td>
-                            <td><i class="fas fa-file-alt me-2 text-info"></i>${result.sheetName || '-'}</td>
                         </tr>
                     `;
                 });
             } else {
                 resultsBody.innerHTML = `
                     <tr>
-                        <td colspan="3" class="text-center text-muted py-4">
+                        <td colspan="2" class="text-center text-muted py-4">
                             <i class="fas fa-exclamation-circle fa-2x mb-2 d-block"></i>
                             No results found
                         </td>
@@ -466,7 +470,7 @@
             document.getElementById('bulkIPs').value = '';
             document.getElementById('resultsBody').innerHTML = `
                 <tr>
-                    <td colspan="3" class="text-center text-muted py-4">
+                    <td colspan="2" class="text-center text-muted py-4">
                         <i class="fas fa-search fa-2x mb-2 d-block"></i>
                         No results yet. Upload a file and search for IP addresses.
                     </td>
@@ -483,8 +487,8 @@
             
             // Prepare data for export
             const exportData = [
-                ['IP Address', 'CSID', 'Sheet Name'], // Header
-                ...searchResults.map(result => [result.ip, result.csid, result.sheetName])
+                ['IP Address', 'CSID'], // Header
+                ...searchResults.map(result => [result.ip, result.csid])
             ];
             
             // Create new workbook and worksheet
@@ -503,7 +507,7 @@
             const resultsBody = document.getElementById('resultsBody');
             resultsBody.innerHTML = `
                 <tr>
-                    <td colspan="3" class="text-center text-danger py-4">
+                    <td colspan="2" class="text-center text-danger py-4">
                         <i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>
                         ${message}
                     </td>
