@@ -239,5 +239,13 @@ def search_odp():
     
     return jsonify(results)
 
+@app.route('/reset_file', methods=['POST'])
+def reset_file():
+    """Reset the uploaded file data"""
+    session_id = session.get('session_id')
+    if session_id in workbook_storage:
+        del workbook_storage[session_id]
+    return jsonify({'success': True, 'message': 'File data reset successfully'})
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5050)

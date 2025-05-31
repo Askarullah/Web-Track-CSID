@@ -250,7 +250,7 @@
                 <th style="width: 50px;">
                     <input type="checkbox" id="selectAll" class="form-check-input">
                 </th>
-                <th style="width: 200px;">CSID</th>
+                <th style="width: 200px;">CSID <span class="badge bg-light text-dark" id="resultCount">0</span></th>
                 <th>CO</th>
             </tr>
         </thead>
@@ -685,10 +685,20 @@ function copyTableContents() {
         }
 
         function closeStatusCard() {
-            fileLoaded = false;
-            document.getElementById('statusCard').style.display = 'none';
-            document.getElementById('fileInput').value = '';
-            showAlert('success', 'File reset successfully. You can now upload a new file.');
+            // Call the server to reset the file data
+            fetch('/reset_file', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                fileLoaded = false;
+                document.getElementById('statusCard').style.display = 'none';
+                document.getElementById('fileInput').value = '';
+                showAlert('success', 'File reset successfully. You can now upload a new file.');
+            })
+            .catch(error => {
+                showAlert('danger', 'Error resetting file: ' + error.message);
+            });
         }
     </script>
 </body>
