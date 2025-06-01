@@ -170,6 +170,78 @@
         .btn-custom:hover {
             transform: translateY(-1px);
         }
+
+        .signature {
+            background: rgba(102, 126, 234, 0.1);
+            border-top: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 0 0 20px 20px;
+            padding: 15px;
+            text-align: center;
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .signature i {
+            color: #667eea;
+            margin-right: 5px;
+        }
+        
+        .signature .developer-name {
+            font-weight: 600;
+            color: #4CAF50;
+        }
+
+        /* Stylish Home Button */
+        .home-button {
+            position: absolute;
+            top: 15px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+            color: white;
+            text-decoration: none;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        
+        .home-button i {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+        }
+        
+        .home-button:hover i {
+            transform: scale(1.1);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .home-button {
+                position: static;
+                margin: 0 auto 15px auto;
+                display: inline-flex;
+            }
+            
+            .header {
+                padding: 15px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -177,13 +249,12 @@
         <div class="main-container">
             <!-- Header -->
             <div class="header">
-                <h1><i class="fas fa-file-excel"></i> TRACKING IP PELANGGAN</h1>
+                <a href="/" class="home-button">
+                    <i class="fas fa-home"></i>
+                    <span>Home</span>
+                </a>
+                <h1><i class="fas fa-search"></i> TRACKING IP PELANGGAN</h1>
                 <p class="mb-0">TG BALAI KARIMUN</p>
-                <div class="mt-3">
-                    <a href="/" class="btn btn-light btn-sm">
-                        <i class="fas fa-home"></i> Back to Home
-                    </a>
-                </div>
             </div>
 
             <div class="p-4">
@@ -265,6 +336,10 @@
                     </table>
                 </div>
             </div>
+                 <!-- Signature -->
+                <div class="signature">
+                <i class="fas fa-code"></i> by <span class="developer-name">Holil Askarullah</span>
+                </div>
         </div>
     </div>
 
