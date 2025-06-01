@@ -9,6 +9,60 @@ import json
 from datetime import datetime
 import io
 import openpyxl
+import logging
+from logging.handlers import RotatingFileHandler
+import traceback
+
+# Create logs directory if it doesn't exist
+log_dirs = [
+    '..\\logs',
+    '..\\logs\\access',
+    '..\\logs\\error',
+    '..\\logs\\activity'
+]
+
+for log_dir in log_dirs:
+    os.makedirs(log_dir, exist_ok=True)
+
+# Configure logging
+# Access logger - tracks all requests
+access_logger = logging.getLogger('access_logger')
+access_logger.setLevel(logging.INFO)
+access_file_handler = RotatingFileHandler(
+    '..\\logs\\access\\access.log',
+    maxBytes=10485760,  # 10MB
+    backupCount=10
+)
+access_file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(message)s'
+))
+access_logger.addHandler(access_file_handler)
+
+# Error logger - tracks all errors
+error_logger = logging.getLogger('error_logger')
+error_logger.setLevel(logging.ERROR)
+error_file_handler = RotatingFileHandler(
+    '..\\logs\\error\\error.log',
+    maxBytes=10485760,  # 10MB
+    backupCount=10
+)
+error_file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(message)s - %(pathname)s:%(lineno)d'
+))
+error_logger.addHandler(error_file_handler)
+
+# Activity logger - tracks user actions
+activity_logger = logging.getLogger('activity_logger')
+activity_logger.setLevel(logging.INFO)
+activity_file_handler = RotatingFileHandler(
+    '..\\logs\\activity\\activity.log',
+    maxBytes=10485760,  # 10MB
+    backupCount=10
+)
+activity_file_handler.setFormatter(logging.Formatter(
+    '%(asctime)s - %(levelname)s - %(message)s'
+))
+activity_logger.addHandler(activity_file_handler)
 
 app = Flask(__name__, template_folder='..\\templates')
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
@@ -16,6 +70,21 @@ app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
 # Global storage for workbook data (in production, use Redis or database)
 workbook_storage = {}
+
+# Request logging middleware
+@app.before_request
+def log_request():
+    access_logger.info(f"Request: {request.method} {request.path} - IP: {request.remote_addr}")
+
+@app.after_request
+def log_response(response):
+    access_logger.info(f"Response: {response.status_code} - {response.content_length} bytes")
+    return response
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    error_logger.error(f"Unhandled exception: {str(e)}\n{traceback.format_exc()}")
+    return jsonify({'error': 'An unexpected error occurred'}), 500
 
 def find_in_all_sheets(session_id, search_value):
     """Find search value in all sheets for a specific session"""
@@ -41,19 +110,23 @@ def index():
     """Main page"""
     if 'session_id' not in session:
         session['session_id'] = str(uuid.uuid4())
+        activity_logger.info(f"New session created: {session['session_id']}")
     return render_template('home.html')
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
     """Handle Excel file upload"""
     if 'file' not in request.files:
+        activity_logger.warning(f"Upload attempt with no file - Session: {session.get('session_id')}")
         return jsonify({'error': 'No file uploaded'}), 400
     
     file = request.files['file']
     if file.filename == '':
+        activity_logger.warning(f"Upload attempt with empty filename - Session: {session.get('session_id')}")
         return jsonify({'error': 'No file selected'}), 400
     
     if not file.filename.lower().endswith(('.xlsx', '.xls')):
+        activity_logger.warning(f"Upload attempt with invalid file type: {file.filename} - Session: {session.get('session_id')}")
         return jsonify({'error': 'Please upload an Excel file (.xlsx or .xls)'}), 400
     
     try:
@@ -76,6 +149,8 @@ def upload_file():
             'upload_time': datetime.now().isoformat()
         }
         
+        activity_logger.info(f"File uploaded: {secure_filename(file.filename)} with {len(workbook_data)} sheets - Session: {session_id}")
+        
         return jsonify({
             'success': True,
             'message': f'Loaded data from {len(workbook_data)} sheets',
@@ -83,6 +158,7 @@ def upload_file():
         })
         
     except Exception as e:
+        error_logger.error(f"File upload error: {str(e)} - Session: {session.get('session_id')}")
         return jsonify({'error': f'Failed to load Excel file: {str(e)}'}), 500
 
 @app.route('/add_csid', methods=['POST'])
@@ -92,10 +168,13 @@ def add_csid():
     csid = data.get('csid', '').strip()
     
     if not csid:
+        activity_logger.warning(f"Empty CSID submission - Session: {session.get('session_id')}")
         return jsonify({'error': 'CSID cannot be empty'}), 400
     
     session_id = session['session_id']
     found_sheets = find_in_all_sheets(session_id, csid)
+    
+    activity_logger.info(f"CSID search: {csid}, Found in: {found_sheets} - Session: {session_id}")
     
     return jsonify({
         'success': True,
@@ -167,6 +246,7 @@ def export_data():
     export_data = data.get('data', [])
     
     if not export_data:
+        activity_logger.warning(f"Export attempt with no data - Session: {session.get('session_id')}")
         return jsonify({'error': 'No data to export'}), 400
     
     try:
@@ -180,71 +260,28 @@ def export_data():
         
         output.seek(0)
         
+        filename = f'csid_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+        activity_logger.info(f"Data exported to {filename} with {len(export_data)} records - Session: {session.get('session_id')}")
+        
         return send_file(
             output,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
-            download_name=f'csid_results_{datetime.now().strftime("%Y%m%d_%H%M%S")}.xlsx'
+            download_name=filename
         )
         
     except Exception as e:
+        error_logger.error(f"Export error: {str(e)} - Session: {session.get('session_id')}")
         return jsonify({'error': f'Export failed: {str(e)}'}), 500
-
-@app.route('/status')
-def get_status():
-    """Get current session status"""
-    session_id = session.get('session_id')
-    
-    if session_id in workbook_storage:
-        wb_info = workbook_storage[session_id]
-        return jsonify({
-            'loaded': True,
-            'filename': wb_info['filename'],
-            'sheets': list(wb_info['data'].keys()),
-            'upload_time': wb_info['upload_time']
-        })
-    else:
-        return jsonify({'loaded': False})
-
-@app.route('/tracking-co.html')
-def track_home():
-    return render_template('tracking-co.html')
-
-@app.route('/tracking-odp.html')
-def track_odp():
-    return render_template('tracking-odp.html')
-    
-@app.route('/tracking-ip.html')
-def track_ip () :
-    return render_template('tracking-ip.html')
-
-@app.route('/search-odp', methods=['POST'])
-def search_odp():
-    odp_id = request.form.get('odp_id')
-    file = request.files['file']
-    
-    wb = openpyxl.load_workbook(file)
-    results = []
-    
-    for sheet_name in wb.sheetnames:
-        if sheet_name == "TRACK ODP":
-            continue
-        ws = wb[sheet_name]
-        for row in ws.iter_rows(min_row=2, values_only=True):
-            if row[1] and str(row[1]).strip() == odp_id.strip():
-                results.append({
-                    'ip': row[2],
-                    'csid': row[3]
-                })
-    
-    return jsonify(results)
 
 @app.route('/reset_file', methods=['POST'])
 def reset_file():
     """Reset the uploaded file data"""
     session_id = session.get('session_id')
     if session_id in workbook_storage:
+        filename = workbook_storage[session_id].get('filename', 'unknown')
         del workbook_storage[session_id]
+        activity_logger.info(f"File data reset: {filename} - Session: {session_id}")
     return jsonify({'success': True, 'message': 'File data reset successfully'})
 
 if __name__ == '__main__':
