@@ -10,7 +10,8 @@ from datetime import datetime
 import io
 import openpyxl
 
-app = Flask(__name__, template_folder='..\\templates')
+# Use os.path.join for better cross-platform compatibility
+app = Flask(__name__, template_folder=os.path.join('..', 'templates'))
 app.secret_key = 'your-secret-key-change-this'  # Change this in production
 app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
 
