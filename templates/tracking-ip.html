@@ -1,251 +1,470 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html lang="en"><head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>TRACKING IP PELANGGAN</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            margin: 20px auto;
-            max-width: 1200px;
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      body {
+        background: #E8E6F0;
+        min-height: 100vh;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        overflow-x: hidden;
+        position: relative;
+        touch-action: manipulation;
+      }
+
+      /* Animated background particles */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+          radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+          radial-gradient(circle at 40% 80%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+        animation: float 6s ease-in-out infinite;
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateY(0px) scale(1); }
+        50% { transform: translateY(-20px) scale(1.05); }
+      }
+
+      .main-container {
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(25px);
+        -webkit-backdrop-filter: blur(25px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 32px;
+        box-shadow: 
+          0 32px 64px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        margin: 20px auto;
+        max-width: 1200px;
+        position: relative;
+        z-index: 1;
+        overflow: hidden;
+      }
+
+      /* Glassmorphism header */
+      .header {
+        background: linear-gradient(135deg, 
+          rgba(76, 175, 80, 0.9) 0%, 
+          rgba(69, 160, 73, 0.9) 50%,
+          rgba(56, 142, 60, 0.9) 100%);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 30px 20px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, 
+          transparent, 
+          rgba(255, 255, 255, 0.1), 
+          transparent);
+        animation: shimmer 3s infinite;
+      }
+
+      @keyframes shimmer {
+        0% { left: -100%; }
+        100% { left: 100%; }
+      }
+
+      .header h1 {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 10px;
+        text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        letter-spacing: -0.02em;
+      }
+
+      .header p {
+        font-size: 1rem;
+        font-weight: 500;
+        opacity: 0.9;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+      }
+
+      /* Stylish Home Button */
+      .home-button {
+        position: absolute;
+        top: 15px;
+        left: 20px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 50px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .home-button:hover {
+        background: rgba(255, 255, 255, 0.3);
+        border-color: rgba(255, 255, 255, 0.5);
+        color: white;
+        text-decoration: none;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      }
+
+      .home-button:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .home-button i {
+        font-size: 1rem;
+        transition: transform 0.3s ease;
+      }
+
+      .home-button:hover i {
+        transform: scale(1.1);
+      }
+
+      .content-section {
+        padding: 30px 20px;
+      }
+
+      /* Glass card components */
+      .glass-card {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        padding: 25px 20px;
+        margin-bottom: 25px;
+        box-shadow: 
+          0 20px 40px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #2c3e50;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      .section-title i {
+        color: #4CAF50;
+      }
+
+      /* Upload zone styling */
+      .upload-zone {
+        border: 3px dashed rgba(76, 175, 80, 0.3);
+        border-radius: 20px;
+        padding: 30px 15px;
+        text-align: center;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        cursor: pointer;
+      }
+
+      .upload-zone:hover {
+        border-color: rgba(76, 175, 80, 0.6);
+        background: rgba(76, 175, 80, 0.1);
+        transform: translateY(-2px);
+      }
+
+      .upload-zone.dragover {
+        border-color: #4CAF50;
+        background: rgba(76, 175, 80, 0.2);
+      }
+
+      .status-card {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border-radius: 15px;
+        padding: 20px;
+        margin: 20px 0;
+        border-left: 5px solid #4CAF50;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+      }
+
+      .search-section {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        padding: 25px 20px;
+        margin: 20px 0;
+        box-shadow: 
+          0 20px 40px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      }
+
+      .results-table {
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 
+          0 20px 40px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        margin-top: 20px;
+      }
+
+      .table {
+        width: 100%;
+        margin-bottom: 0;
+      }
+
+      .table thead th {
+        background: linear-gradient(135deg, 
+          rgba(76, 175, 80, 0.9) 0%, 
+          rgba(69, 160, 73, 0.9) 50%,
+          rgba(56, 142, 60, 0.9) 100%);
+        color: white;
+        border: none;
+        padding: 15px 10px;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      .table tbody td {
+        padding: 12px 10px;
+        border-color: rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        font-size: 0.9rem;
+        word-break: break-word;
+      }
+
+      .table tbody tr:hover {
+        background-color: rgba(255, 255, 255, 0.2);
+      }
+
+      .border-dashed {
+        border: 3px dashed rgba(76, 175, 80, 0.3);
+        border-radius: 20px;
+        transition: all 0.3s ease;
+      }
+
+      .progress {
+        height: 8px;
+        border-radius: 10px;
+        background-color: rgba(76, 175, 80, 0.2);
+      }
+
+      .progress-bar {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        border-radius: 10px;
+      }
+
+      .form-control {
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        padding: 12px 15px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        color: #2c3e50;
+        font-size: 16px; /* Larger font size for mobile */
+      }
+
+      .form-control:focus {
+        border-color: #4CAF50;
+        box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
+        background: rgba(255, 255, 255, 0.3);
+      }
+
+      .btn-primary-custom {
+        background: linear-gradient(45deg, #4CAF50, #45a049);
+        border: none;
+        color: white;
+        border-radius: 10px;
+        padding: 12px 24px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        touch-action: manipulation;
+        -webkit-appearance: none;
+      }
+
+      .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(76, 175, 80, 0.4);
+      }
+
+      .btn-primary-custom:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .btn-custom {
+        border-radius: 10px;
+        padding: 10px 20px;
+        font-weight: 500;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        touch-action: manipulation;
+        -webkit-appearance: none;
+        margin-bottom: 10px;
+      }
+
+      .btn-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      }
+
+      .btn-custom:active {
+        transform: translateY(1px);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      }
+
+      .alert-success {
+        background-color: rgba(76, 175, 80, 0.1);
+        border-color: #4CAF50;
+        color: #2e7d32;
+      }
+
+      .bulk-input {
+        min-height: 150px;
+        resize: vertical;
+      }
+
+      .loading-spinner {
+        display: none;
+        margin-left: 10px;
+      }
+
+      .signature {
+        background: rgba(120, 119, 198, 0.1);
+        border-top: 1px solid rgba(120, 119, 198, 0.2);
+        border-radius: 0 0 32px 32px;
+        padding: 15px;
+        text-align: center;
+        color: #666;
+        font-size: 0.9rem;
+      }
+      
+      .signature i {
+        color: #7877C6;
+        margin-right: 5px;
+      }
+      
+      .signature .developer-name {
+        font-weight: 600;
+        color: #4CAF50;
+      }
+
+      /* Responsive adjustments */
+      @media (max-width: 768px) {
+        .home-button {
+          position: static;
+          margin: 0 auto 15px auto;
+          display: inline-flex;
         }
         
         .header {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            border-radius: 20px 20px 0 0;
-            padding: 20px;
-            text-align: center;
+          padding: 20px 15px;
+        }
+
+        .header h1 {
+          font-size: 1.5rem;
+        }
+
+        .header p {
+          font-size: 0.9rem;
+        }
+
+        .main-container {
+          margin: 10px;
+          border-radius: 20px;
+        }
+
+        .content-section {
+          padding: 20px 15px;
+        }
+
+        .glass-card {
+          padding: 20px 15px;
         }
 
         .upload-zone {
-            border: 3px dashed #ddd;
-            border-radius: 15px;
-            padding: 40px;
-            text-align: center;
-            transition: all 0.3s ease;
-            background: #f8f9fa;
+          padding: 20px 10px;
         }
 
-        .upload-zone:hover {
-            background-color: #e9ecef;
-            border-color: #4CAF50;
+        .btn-group {
+          display: flex;
+          flex-direction: column;
+          width: 100%;
         }
 
-        .btn-primary-custom {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            border: none;
-            color: white;
-            border-radius: 10px;
-            padding: 12px 24px;
-            font-weight: 500;
-            transition: all 0.3s ease;
+        .btn-custom, .btn-primary-custom {
+          width: 100%;
+          margin-bottom: 10px;
+          padding: 12px 15px;
+          font-size: 0.9rem;
         }
 
-        .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
+        .table thead th, .table tbody td {
+          padding: 10px 8px;
+          font-size: 0.8rem;
         }
 
-        .status-card {
-            background: #f8f9fa;
-            border-radius: 15px;
-            padding: 20px;
-            margin: 20px 0;
-            border-left: 5px solid #4CAF50;
-        }
-
-        .search-section {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            margin: 20px 0;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-
+        /* Fix for mobile scrolling */
         .results-table {
-            background: white;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-top: 20px;
+          overflow-x: auto;
         }
+      }
 
-        .table thead th {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 15px;
-            font-weight: 600;
-        }
-
-        .table tbody td {
-            padding: 12px 15px;
-            border-color: #e9ecef;
-        }
-
-        .table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-
-        .border-dashed {
-            border: 2px dashed #4CAF50;
-            border-radius: 15px;
-            transition: all 0.3s ease;
-        }
-
-        .progress {
-            height: 8px;
-            border-radius: 10px;
-            background-color: rgba(76, 175, 80, 0.2);
-        }
-
-        .progress-bar {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            border-radius: 10px;
-        }
-
-        .form-control {
-            border-radius: 10px;
-            border: 2px solid #e9ecef;
-            padding: 12px 15px;
-            transition: all 0.3s ease;
-        }
-
-        .form-control:focus {
-            border-color: #4CAF50;
-            box-shadow: 0 0 0 0.2rem rgba(76, 175, 80, 0.25);
-        }
-
-        .btn-primary {
-            background: linear-gradient(45deg, #4CAF50, #45a049);
-            border: none;
-            border-radius: 10px;
-            padding: 12px 24px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.4);
-        }
-
-        .alert-success {
-            background-color: rgba(76, 175, 80, 0.1);
-            border-color: #4CAF50;
-            color: #2e7d32;
-        }
-
-        .bulk-input {
-            min-height: 150px;
-            resize: vertical;
-        }
-
-        .loading-spinner {
-            display: none;
-            margin-left: 10px;
-        }
-
-        .btn-custom {
-            border-radius: 10px;
-            padding: 10px 20px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .btn-custom:hover {
-            transform: translateY(-1px);
-        }
-
-        .signature {
-            background: rgba(102, 126, 234, 0.1);
-            border-top: 1px solid rgba(102, 126, 234, 0.2);
-            border-radius: 0 0 20px 20px;
-            padding: 15px;
-            text-align: center;
-            color: #666;
-            font-size: 0.9rem;
-        }
-        
-        .signature i {
-            color: #667eea;
-            margin-right: 5px;
-        }
-        
-        .signature .developer-name {
-            font-weight: 600;
-            color: #4CAF50;
-        }
-
-        /* Stylish Home Button */
-        .home-button {
-            position: absolute;
-            top: 15px;
-            left: 20px;
-            background: rgba(255, 255, 255, 0.2);
-            backdrop-filter: blur(10px);
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 50px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-        }
-        
-        .home-button:hover {
-            background: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.5);
-            color: white;
-            text-decoration: none;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-        }
-        
-        .home-button i {
-            font-size: 1rem;
-            transition: transform 0.3s ease;
-        }
-        
-        .home-button:hover i {
-            transform: scale(1.1);
-        }
-        
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            .home-button {
-                position: static;
-                margin: 0 auto 15px auto;
-                display: inline-flex;
-            }
-            
-            .header {
-                padding: 15px;
-            }
-        }
+      /* Fix iOS input styling */
+      input, textarea, select, button {
+        -webkit-appearance: none;
+        border-radius: 10px;
+      }
     </style>
 </head>
 <body>
-    <div class="container-fluid p-4">
+    <div class="container-fluid p-2 p-md-4">
         <div class="main-container">
             <!-- Header -->
             <div class="header">
@@ -257,50 +476,50 @@
                 <p class="mb-0">TG BALAI KARIMUN</p>
             </div>
 
-            <div class="p-4">
+            <div class="content-section">
                 <!-- File Upload Section -->
                 <div class="row mb-4">
                     <div class="col-12">
-                        <h4 class="text-primary mb-3"><i class="fas fa-upload me-2"></i>Upload Excel File</h4>
-                        <div class="upload-zone border-dashed" id="uploadZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
-                            <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
-                            <h5 class="mb-2">Drag & Drop Excel File Here</h5>
-                            <p class="text-muted small mb-3">Supported formats: .xlsx, .xls</p>
-                            <input type="file" id="excelFile" class="d-none" accept=".xlsx,.xls">
-                            <button class="btn btn-primary-custom btn-lg" onclick="document.getElementById('excelFile').click()">
-                                <i class="fas fa-folder-open me-2"></i>Browse Files
-                            </button>
-                        </div>
+                        <div class="glass-card">
+                            <h4 class="section-title"><i class="fas fa-upload me-2"></i>Upload Excel File</h4>
+                            <div class="upload-zone" id="uploadZone" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event)">
+                                <i class="fas fa-cloud-upload-alt fa-3x mb-3 text-muted"></i>
+                                <h5 class="mb-2">Drag & Drop Excel File Here</h5>
+                                <p class="text-muted small mb-3">Supported formats: .xlsx, .xls</p>
+                                <input type="file" id="excelFile" class="d-none" accept=".xlsx,.xls">
+                                <button class="btn btn-primary-custom btn-lg" onclick="document.getElementById('excelFile').click()">
+                                    <i class="fas fa-folder-open me-2"></i>Browse Files
+                                </button>
+                            </div>
 
-                        <!-- Status Card -->
-                        <div class="status-card alert alert-dismissible fade mt-3 d-none" id="uploadStatus" role="alert">
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-info-circle me-3"></i>
-                                <div id="statusContent"></div>
+                            <!-- Status Card -->
+                            <div class="status-card alert alert-dismissible fade mt-3 d-none" id="uploadStatus" role="alert">
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-info-circle me-3"></i>
+                                    <div id="statusContent"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Search Section -->
-                <div class="search-section">
-                    <div class="col-12">
-                        <h4 class="text-primary mb-3"><i class="fas fa-search me-2"></i>TRACKING IP </h4>
-                        <textarea class="form-control bulk-input" id="bulkIPs" 
-                                  placeholder="(Paste Paste CSID disini ges)&#10;cth:&#10;SI-BKxxx&#10;"></textarea>
-                        <div class="mt-3">
-                            <button class="btn btn-primary-custom btn-custom me-2" id="addBulkBtn" onclick="searchBulkIPs()">
-                                <i class="fas fa-search"></i> Track IP
-                                <div class="loading-spinner spinner-border spinner-border-sm" role="status"></div>
-                            </button>
-                            <button class="btn btn-outline-secondary btn-custom me-2" id="clearBulkBtn" onclick="clearResults()">
-                                <i class="fas fa-eraser"></i> Clear All
-                            </button>
-                            <button class="btn btn-outline-success btn-custom" id="exportBtn" onclick="exportToExcel()">
-                                <i class="fas fa-file-excel"></i> Download Excel
-                            </button>
-                        </div>
+                <div class="glass-card">
+                    <h4 class="section-title"><i class="fas fa-search me-2"></i>TRACKING IP</h4>
+                    <textarea class="form-control bulk-input" id="bulkIPs" 
+                              placeholder="(Paste Paste CSID disini ges)&#10;cth:&#10;SI-BKxxx&#10;"></textarea>
+                    <div class="mt-3 d-flex flex-wrap gap-2">
+                        <button class="btn btn-primary-custom me-2 mb-2" id="addBulkBtn" onclick="searchBulkIPs()">
+                            <i class="fas fa-search me-1"></i> Track IP
+                            <div class="loading-spinner spinner-border spinner-border-sm" role="status"></div>
+                        </button>
+                        <button class="btn btn-outline-secondary me-2 mb-2" id="clearBulkBtn" onclick="clearResults()">
+                            <i class="fas fa-eraser me-1"></i> Clear All
+                        </button>
+                        <button class="btn btn-outline-success mb-2" id="exportBtn" onclick="exportToExcel()">
+                            <i class="fas fa-file-excel me-1"></i> Download Excel
+                        </button>
                     </div>
                     
                     <!-- Progress Bar -->
@@ -317,29 +536,30 @@
 
                 <!-- Results Section -->
                 <div class="results-table">
-                    <table class="table table-striped mb-0">
-                        <thead>
-                            <tr>
-                                <th><i class="fas fa-network-wired me-2"></i>CSID</th>
-                                <th><i class="fas fa-id-card me-2"></i>IP</th>
-                                <!-- Sheet Name column removed -->
-                            </tr>
-                        </thead>
-                        <tbody id="resultsBody">
-                            <tr>
-                                <td colspan="2" class="text-center text-muted py-4">
-                                    <i class="fas fa-search fa-2x mb-2 d-block"></i>
-                                    No results yet. Upload a file and search for IP addresses.
-                                </td>
-                            </tr>
-                        </tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th><i class="fas fa-network-wired me-1"></i>CSID</th>
+                                    <th><i class="fas fa-id-card me-1"></i>IP</th>
+                                </tr>
+                            </thead>
+                            <tbody id="resultsBody">
+                                <tr>
+                                    <td colspan="2" class="text-center text-muted py-4">
+                                        <i class="fas fa-search fa-2x mb-2 d-block"></i>
+                                        No results yet. Upload a file and search for IP addresses.
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-                 <!-- Signature -->
-                <div class="signature">
+            <!-- Signature -->
+            <div class="signature">
                 <i class="fas fa-code"></i> by <span class="developer-name">Holil Askarullah</span>
-                </div>
+            </div>
         </div>
     </div>
 
