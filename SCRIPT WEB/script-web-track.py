@@ -104,6 +104,7 @@ def add_csid():
         'found_sheets': found_sheets
     })
 
+#SCRIPT YANG TRIGGER TRACKING CO
 @app.route('/add_bulk_csids', methods=['POST'])
 def add_bulk_csids():
     """Add multiple CSIDs"""
@@ -219,6 +220,7 @@ def track_odp():
 def track_ip () :
     return render_template('tracking-ip.html')
 
+#script buat tracking-odp.html
 @app.route('/search-odp', methods=['POST'])
 def search_odp():
     odp_id = request.form.get('odp_id')
