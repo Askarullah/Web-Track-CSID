@@ -242,6 +242,62 @@ def search_odp():
     
     return jsonify(results)
 
+#script buat tracking-ip.html
+@app.route('/search-ip', methods=['POST'])
+def search_ip():
+    csid_input = request.form.get('csid')
+    file = request.files['file']
+    
+    # Parse multiple CSIDs - split by newlines, commas, or semicolons
+    csids = []
+    if csid_input:
+        # Split by various delimiters and clean up
+        import re
+        csid_list = re.split(r'[,;\n\r]+', csid_input.strip())
+        csids = [csid.strip() for csid in csid_list if csid.strip()]
+    
+    if not csids:
+        return jsonify({'error': 'Please provide at least one CSID'})
+    
+    wb = openpyxl.load_workbook(file)
+    results = []
+    found_csids = set()
+    
+    # Search through all sheets except "TRACK ODP"
+    for sheet_name in wb.sheetnames:
+        if sheet_name == "TRACK ODP":
+            continue
+        ws = wb[sheet_name]
+        for row in ws.iter_rows(min_row=2, values_only=True):
+            if row[3]:  # Check if CSID column has value
+                row_csid = str(row[3]).strip()
+                # Check if this row's CSID matches any of the searched CSIDs
+                for search_csid in csids:
+                    if row_csid == search_csid:
+                        results.append({
+                            'csid': row_csid,
+                            'ip': row[2] if row[2] else 'N/A',
+                            'sheet': sheet_name
+                        })
+                        found_csids.add(search_csid)
+                        break
+    
+    # Add entries for CSIDs that were not found
+    not_found_csids = set(csids) - found_csids
+    for csid in not_found_csids:
+        results.append({
+            'csid': csid,
+            'ip': 'Not Found',
+            'sheet': 'N/A'
+        })
+    
+    # Sort results to show found ones first, then not found
+    results.sort(key=lambda x: (x['ip'] == 'Not Found', x['csid']))
+    
+    return jsonify(results)
+
+
+    
 @app.route('/reset_file', methods=['POST'])
 def reset_file():
     """Reset the uploaded file data"""
