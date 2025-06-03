@@ -260,10 +260,12 @@ def search_ip():
         return jsonify({'error': 'Please provide at least one CSID'})
     
     wb = openpyxl.load_workbook(file)
-    results = []
-    found_csids = set()
     
-    # Search through all sheets except "TRACK ODP"
+    # IMPROVEMENT: Create a Map (dictionary) for O(1) lookup instead of nested loops
+    # Build the lookup table first by scanning all sheets once
+    ip_map = {}  # Dictionary: csid -> {'ip': ip_address, 'sheet': sheet_name}
+    
+    # Single pass through all sheets to build the lookup map
     for sheet_name in wb.sheetnames:
         if sheet_name == "TRACK ODP":
             continue
@@ -271,16 +273,26 @@ def search_ip():
         for row in ws.iter_rows(min_row=2, values_only=True):
             if row[3]:  # Check if CSID column has value
                 row_csid = str(row[3]).strip()
-                # Check if this row's CSID matches any of the searched CSIDs
-                for search_csid in csids:
-                    if row_csid == search_csid:
-                        results.append({
-                            'csid': row_csid,
-                            'ip': row[2] if row[2] else 'N/A',
-                            'sheet': sheet_name
-                        })
-                        found_csids.add(search_csid)
-                        break
+                if row_csid:  # Only add non-empty CSIDs
+                    ip_map[row_csid] = {
+                        'ip': row[2] if row[2] else 'N/A',
+                        'sheet': sheet_name
+                    }
+    
+    # IMPROVEMENT: Fast O(1) lookup for each searched CSID
+    results = []
+    found_csids = set()
+    
+    for search_csid in csids:
+        if search_csid in ip_map:
+            # Found the CSID
+            data = ip_map[search_csid]
+            results.append({
+                'csid': search_csid,
+                'ip': data['ip'],
+                'sheet': data['sheet']
+            })
+            found_csids.add(search_csid)
     
     # Add entries for CSIDs that were not found
     not_found_csids = set(csids) - found_csids
@@ -295,7 +307,6 @@ def search_ip():
     results.sort(key=lambda x: (x['ip'] == 'Not Found', x['csid']))
     
     return jsonify(results)
-
 
     
 @app.route('/reset_file', methods=['POST'])

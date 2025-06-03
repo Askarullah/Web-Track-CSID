@@ -536,70 +536,77 @@
 
         //FUNCTION THAT TRIGGERS SEARCH IP BUTTON
         function searchIP() {
-            const fileInput = document.getElementById('excelFile');
-            const csid = document.getElementById('csidInput').value;
-            const searchProgress = document.getElementById('searchProgress');
-            const resultsBody = document.getElementById('resultsBody');
-            
-            if (!fileLoaded) {
-                alert('Please upload an Excel file first');
-                return;
-            }
-            
-            if (!csid.trim()) {
-              alert('Please enter at least one CSID');
-              return;
-            }
-            
-            // Show progress indicator
-            searchProgress.classList.remove('d-none');
-            
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('csid', csid);
+    const fileInput = document.getElementById('excelFile');
+    const csid = document.getElementById('csidInput').value;
+    const searchProgress = document.getElementById('searchProgress');
+    const resultsBody = document.getElementById('resultsBody');
+    
+    if (!fileLoaded) {
+        alert('Please upload an Excel file first');
+        return;
+    }
+    
+    if (!csid.trim()) {
+        alert('Please enter at least one CSID');
+        return;
+    }
+    
+    // Show progress indicator
+    searchProgress.classList.remove('d-none');
+    
+    const formData = new FormData();
+    formData.append('file', fileInput.files[0]);
+    formData.append('csid', csid);
 
-            fetch('/search-ip', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                searchProgress.classList.add('d-none');
-                resultsBody.innerHTML = '';
-                
-                if (data.length > 0) {
-                    data.forEach(item => {
-                    resultsBody.innerHTML += `
-                    <tr>
+    fetch('/search-ip', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        searchProgress.classList.add('d-none');
+        resultsBody.innerHTML = '';
+        
+        if (data.length > 0) {
+            // IMPROVED: Use document fragment for better performance
+            const fragment = document.createDocumentFragment();
+            
+            data.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
                     <td><i class="fas fa-id-card me-2 text-primary"></i>${item.csid}</td>
                     <td><i class="fas fa-network-wired me-2 ${item.ip === 'Not Found' ? 'text-danger' : 'text-success'}"></i>${item.ip}</td>
-                    </tr>
-                  `;
-                    });
-                } else {
-                    resultsBody.innerHTML = `
-                        <tr>
-                            <td colspan="2" class="text-center text-muted py-4">
-                                <i class="fas fa-exclamation-circle fa-2x mb-2 d-block"></i>
-                                No results found for CSID: ${csid}
-                            </td>
-                        </tr>
-                    `;
-                }
-            })
-            .catch(error => {
-                searchProgress.classList.add('d-none');
-                console.error('Error:', error);
-                resultsBody.innerHTML = `
-                    <tr>
-                        <td colspan="2" class="text-center text-danger py-4">
-                            <i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>
-                            An error occurred while searching. Please try again.
-                        </td>
-                    </tr>
                 `;
+                fragment.appendChild(tr);
             });
+            
+            // Add all rows at once instead of one by one
+            resultsBody.appendChild(fragment);
+            
+        } else {
+            resultsBody.innerHTML = `
+                <tr>
+                    <td colspan="2" class="text-center text-muted py-4">
+                        <i class="fas fa-exclamation-circle fa-2x mb-2 d-block"></i>
+                        No results found for CSID: ${csid}
+                    </td>
+                </tr>
+            `;
         }
+    })
+    .catch(error => {
+        searchProgress.classList.add('d-none');
+        console.error('Error:', error);
+        resultsBody.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-center text-danger py-4">
+                    <i class="fas fa-exclamation-triangle fa-2x mb-2 d-block"></i>
+                    An error occurred while searching. Please try again.
+                </td>
+            </tr>
+        `;
+    });
+}
 
         // Allow Enter key to trigger search
         document.getElementById('csidInput').addEventListener('keypress', function(e) {
